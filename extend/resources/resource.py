@@ -27,23 +27,21 @@ class Resource:
     ) -> Any:
         if params is not None:
             params = {k: v for k, v in params.items() if v is not None}
-        match method:
-            case "get":
-                return await self._api_client.get(self.build_full_path(path, base_url_override), params)
-            case "post":
-                return await self._api_client.post(self.build_full_path(path, base_url_override), params)
-            case "put":
-                return await self._api_client.put(self.build_full_path(path, base_url_override), params)
-            case "patch":
-                return await self._api_client.patch(self.build_full_path(path, base_url_override), params)
-            case "post_multipart":
-                return await self._api_client.post_multipart(
-                    self.build_full_path(path, base_url_override),
-                    data=data,
-                    files=files
-                )
-            case _:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+        if method == "get":
+            return await self._api_client.get(self.build_full_path(path, base_url_override), params)
+        if method == "post":
+            return await self._api_client.post(self.build_full_path(path, base_url_override), params)
+        if method == "put":
+            return await self._api_client.put(self.build_full_path(path, base_url_override), params)
+        if method == "patch":
+            return await self._api_client.patch(self.build_full_path(path, base_url_override), params)
+        if method == "post_multipart":
+            return await self._api_client.post_multipart(
+                self.build_full_path(path, base_url_override),
+                data=data,
+                files=files
+            )
+        raise ValueError(f"Unsupported HTTP method: {method}")
 
     def build_full_path(self, path, base_url_override):
         base = base_url_override if base_url_override is not None else self._base_url

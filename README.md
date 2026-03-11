@@ -10,6 +10,14 @@ Python library for the Extend API
 A Python client for the Extend API, providing a simple and intuitive interface for managing virtual cards, transactions,
 and more.
 
+## Included App
+
+This repo now also contains a personal expense management app:
+
+- `server/`: FastAPI backend that syncs Extend transactions, categories, and receipts into a local SQLite cache
+- `web/`: Next.js frontend for dashboard, transactions, categories, and settings
+- `docs/app/README.md`: setup instructions for the app workspace
+
 ## Features
 
 - Create and manage virtual cards

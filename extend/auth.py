@@ -18,8 +18,9 @@ class BasicAuth(Authorization):
         self.api_version = api_version
 
     def get_auth_headers(self) -> Dict[str, str]:
+        encoded_credentials = base64.b64encode(f"{self.api_key}:{self.api_secret}".encode()).decode()
         return {
-            "Authorization": f"Basic {base64.b64encode(f"{self.api_key}:{self.api_secret}".encode()).decode()}",
+            "Authorization": f"Basic {encoded_credentials}",
             "x-extend-api-key": self.api_key,
             "Accept": self.api_version,
         }

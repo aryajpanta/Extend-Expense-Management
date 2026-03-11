@@ -140,7 +140,6 @@ class VirtualCards(Resource):
         if recurs is not None:
             card_data["recurs"] = recurs
 
-        print(f"Creating virtual card with data: {card_data}")  # Debug log
         return await self._request(method="post", params=card_data)
 
     async def update_virtual_card(

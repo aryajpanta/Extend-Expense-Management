@@ -1,0 +1,2 @@
+"""Expense manager application package."""
+
