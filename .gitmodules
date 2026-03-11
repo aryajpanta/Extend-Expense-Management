@@ -1,0 +1,3 @@
+[submodule ".ai"]
+	path = .ai
+	url = git@github.com:aryajpanta/ai-agent-template.git
