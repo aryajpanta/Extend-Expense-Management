@@ -41,6 +41,7 @@ Fill `.env` with:
 Backend:
 
 ```bash
+PYTHONPATH=. .venv/bin/alembic upgrade head
 PYTHONPATH=. .venv/bin/uvicorn server.app.main:app --reload
 ```
 
@@ -56,4 +57,3 @@ npm run dev
 ```bash
 ./tools/verify.sh
 ```
-

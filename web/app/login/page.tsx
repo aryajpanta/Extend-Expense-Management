@@ -1,11 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { apiFetch } from "@/lib/api";
+import { APIError, SessionResponse, apiFetch } from "@/lib/api";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -14,8 +16,16 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") || "/dashboard";
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const sessionQuery = useQuery({
+    queryKey: ["session"],
+    queryFn: () => apiFetch<SessionResponse>("auth/session"),
+    retry: false
+  });
   const {
     register,
     handleSubmit,
@@ -28,12 +38,27 @@ export default function LoginPage() {
     }
   });
 
+  useEffect(() => {
+    if (sessionQuery.data?.authenticated) {
+      router.replace(nextPath);
+    }
+  }, [nextPath, router, sessionQuery.data]);
+
   const onSubmit = async (values: LoginForm) => {
-    await apiFetch("auth/login", {
-      method: "POST",
-      body: JSON.stringify(values)
-    });
-    router.push("/dashboard");
+    setErrorMessage(null);
+    try {
+      await apiFetch("auth/login", {
+        method: "POST",
+        body: JSON.stringify(values)
+      });
+      router.push(nextPath);
+    } catch (error) {
+      if (error instanceof APIError && error.status === 401) {
+        setErrorMessage("Invalid email or password.");
+        return;
+      }
+      setErrorMessage("Unable to sign in right now.");
+    }
   };
 
   return (
@@ -54,6 +79,9 @@ export default function LoginPage() {
             Sign in
           </h2>
           <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+            {errorMessage ? (
+              <div className="rounded-2xl border border-rust/20 bg-rust/5 px-4 py-3 text-sm text-rust">{errorMessage}</div>
+            ) : null}
             <label className="block">
               <span className="mb-2 block text-sm text-slate">Email</span>
               <input
@@ -86,3 +114,10 @@ export default function LoginPage() {
   );
 }
 
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="flex min-h-screen items-center justify-center px-6 py-12 text-sm text-slate">Loading login…</main>}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}

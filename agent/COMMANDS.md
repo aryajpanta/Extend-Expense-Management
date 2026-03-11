@@ -15,6 +15,11 @@
 
 - `PYTHONPATH=. .venv/bin/uvicorn server.app.main:app --reload`
 
+## Migrations
+
+- `.venv/bin/alembic upgrade head`
+- `.venv/bin/alembic revision -m "describe-change"`
+
 ## Frontend dev
 
 - `cd web && npm run dev`
@@ -34,4 +39,3 @@
 ## Git
 
 - `git submodule update --init --recursive`
-

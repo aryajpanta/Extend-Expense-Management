@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+from alembic import command
+from alembic.config import Config
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import get_settings
-from ..database import Base, engine
+from ..config import ROOT_DIR, get_settings
 from ..models import User
 from ..security import hash_password
 
 
-def init_database() -> None:
-    Base.metadata.create_all(bind=engine)
+def migrate_database() -> None:
+    alembic_config = Config(str(ROOT_DIR / "alembic.ini"))
+    alembic_config.set_main_option("script_location", str(ROOT_DIR / "alembic"))
+    alembic_config.set_main_option("sqlalchemy.url", get_settings().database_url)
+    command.upgrade(alembic_config, "head")
 
 
 def bootstrap_admin(db: Session) -> None:
@@ -25,4 +31,3 @@ def bootstrap_admin(db: Session) -> None:
     )
     db.add(user)
     db.commit()
-

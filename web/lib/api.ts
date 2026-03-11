@@ -1,6 +1,16 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
 
+export class APIError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "APIError";
+    this.status = status;
+  }
+}
+
 type FetchOptions = RequestInit & {
   query?: Record<string, string | number | boolean | undefined>;
 };
@@ -32,7 +42,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Request failed with ${response.status}`);
+    throw new APIError(text || `Request failed with ${response.status}`, response.status);
   }
 
   if (response.status === 204) {
@@ -122,6 +132,11 @@ export type ExpenseLabel = {
   name: string;
   code: string;
   active: boolean;
+};
+
+export type LoginPayload = {
+  email: string;
+  password: string;
 };
 
 export type SettingsPayload = {

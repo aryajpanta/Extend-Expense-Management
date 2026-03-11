@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .database import db_context
 from .routers import auth, categories, dashboard, settings as settings_router, sync, transactions
-from .services.bootstrap import bootstrap_admin, init_database
+from .services.bootstrap import bootstrap_admin, migrate_database
 from .services.extend_api import get_extend_client
 from .services.sync import run_sync_cycle
 
@@ -27,7 +27,7 @@ async def sync_forever() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_database()
+    migrate_database()
     with db_context() as db:
         bootstrap_admin(db)
     try:

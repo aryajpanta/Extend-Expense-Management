@@ -4,7 +4,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { AppShell } from "@/components/app-shell";
-import { TransactionDetail, apiFetch, currency, friendlyDate } from "@/lib/api";
+import { ExpenseCategory, ExpenseLabel, TransactionDetail, apiFetch, currency, friendlyDate } from "@/lib/api";
 
 export default function TransactionDetailPage({
   params
@@ -17,9 +17,26 @@ export default function TransactionDetailPage({
     queryKey: ["transaction", resolvedParams.id],
     queryFn: () => apiFetch<TransactionDetail>(`transactions/${resolvedParams.id}`)
   });
+  const categoriesQuery = useQuery({
+    queryKey: ["expense-categories"],
+    queryFn: () => apiFetch<ExpenseCategory[]>("expense-categories")
+  });
   const [categoryId, setCategoryId] = React.useState("");
   const [labelId, setLabelId] = React.useState("");
   const [receiptFile, setReceiptFile] = React.useState<File | null>(null);
+  const labelsQuery = useQuery({
+    queryKey: ["expense-labels", categoryId],
+    queryFn: () => apiFetch<ExpenseLabel[]>(`expense-categories/${categoryId}/labels`),
+    enabled: Boolean(categoryId)
+  });
+
+  React.useEffect(() => {
+    const current = transaction?.expenseDetails[0];
+    if (current?.categoryId) {
+      setCategoryId(current.categoryId);
+      setLabelId(current.labelId ?? "");
+    }
+  }, [transaction?.id, transaction?.expenseDetails]);
 
   const expenseMutation = useMutation({
     mutationFn: () =>
@@ -32,8 +49,6 @@ export default function TransactionDetailPage({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["transaction", resolvedParams.id] });
       await queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      setCategoryId("");
-      setLabelId("");
     }
   });
 
@@ -122,7 +137,11 @@ export default function TransactionDetailPage({
             <div className="mt-5 space-y-3">
               {transaction.expenseDetails.map((item, index) => (
                 <div key={`${item.categoryId}-${index}`} className="rounded-2xl bg-fog px-4 py-3 text-sm">
-                  Category: {item.categoryId} {item.labelId ? `· Label: ${item.labelId}` : ""}
+                  Category:{" "}
+                  {categoriesQuery.data?.find((category) => category.id === item.categoryId)?.name ?? item.categoryId}
+                  {item.labelId
+                    ? ` · Label: ${labelsQuery.data?.find((label) => label.id === item.labelId)?.name ?? item.labelId}`
+                    : ""}
                 </div>
               ))}
             </div>
@@ -133,18 +152,31 @@ export default function TransactionDetailPage({
                 expenseMutation.mutate();
               }}
             >
-              <input
+              <select
                 value={categoryId}
                 onChange={(event) => setCategoryId(event.target.value)}
-                placeholder="Category ID"
                 className="w-full rounded-2xl border border-black/10 bg-fog px-4 py-3 text-sm outline-none"
-              />
-              <input
+              >
+                <option value="">Select category</option>
+                {categoriesQuery.data?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <select
                 value={labelId}
                 onChange={(event) => setLabelId(event.target.value)}
-                placeholder="Label ID (optional)"
                 className="w-full rounded-2xl border border-black/10 bg-fog px-4 py-3 text-sm outline-none"
-              />
+                disabled={!categoryId}
+              >
+                <option value="">No label</option>
+                {labelsQuery.data?.map((label) => (
+                  <option key={label.id} value={label.id}>
+                    {label.name}
+                  </option>
+                ))}
+              </select>
               <button className="rounded-full bg-pine px-5 py-3 text-sm font-medium text-white" type="submit">
                 {expenseMutation.isPending ? "Saving..." : "Update expense data"}
               </button>
