@@ -12,6 +12,8 @@ from extend import ExtendClient
 
 from ..config import get_settings
 from ..models import ExpenseCategory, ExpenseLabel, ReceiptAttachment, SyncRun, Transaction, TransactionDetail
+from .merchant_intelligence import infer_suggested_category, normalize_merchant_text
+from .merchant_rules import auto_assign_transaction_expense_data
 
 
 sync_lock = asyncio.Lock()
@@ -21,9 +23,14 @@ def parse_datetime(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
+        if len(value) >= 5 and (value[-5] == "+" or value[-5] == "-") and value[-3] != ":":
+            value = f"{value[:-2]}:{value[-2:]}"
         if value.endswith("Z"):
             return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc).replace(tzinfo=None)
-        return datetime.fromisoformat(value)
+        parsed = datetime.fromisoformat(value)
+        if parsed.tzinfo is not None:
+            return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+        return parsed
     except ValueError:
         try:
             return datetime.strptime(value, "%Y-%m-%d")
@@ -54,6 +61,7 @@ def normalize_transaction(tx: dict[str, Any]) -> dict[str, Any]:
     receipt_missing = bool(tx.get("receiptRequired")) and attachments_count == 0
     expense_statuses = tx.get("expenseCategoryStatuses") or []
     missing_expense_categories = "Missing" in expense_statuses or bool(tx.get("missingExpenseCategories"))
+    suggested_category_name, suggested_category_reason = infer_suggested_category(tx)
     return {
         "id": tx["id"],
         "merchant_name": merchant_name,
@@ -67,6 +75,8 @@ def normalize_transaction(tx: dict[str, Any]) -> dict[str, Any]:
         "receipt_missing": receipt_missing,
         "attachments_count": attachments_count,
         "missing_expense_categories": missing_expense_categories,
+        "suggested_category_name": suggested_category_name,
+        "suggested_category_reason": suggested_category_reason,
         "raw_payload": tx,
         "synced_at": datetime.utcnow(),
     }
@@ -211,6 +221,36 @@ async def sync_transactions(db: Session, client: ExtendClient, days_back: int) -
     return fetched, upserted
 
 
+async def auto_assign_categorization_rules(db: Session, client: ExtendClient) -> int:
+    transactions = db.scalars(select(Transaction)).all()
+    return await auto_assign_transaction_expense_data(db, client, transactions, upsert_transaction)
+
+
+def find_matching_extend_category(
+    db: Session,
+    suggested_category_name: str | None,
+) -> ExpenseCategory | None:
+    if not suggested_category_name:
+        return None
+    target = normalize_merchant_text(suggested_category_name)
+    categories = db.scalars(select(ExpenseCategory).where(ExpenseCategory.active.is_(True))).all()
+    for category in categories:
+        if normalize_merchant_text(category.name) == target or normalize_merchant_text(category.code) == target:
+            return category
+    alias_map = {
+        "TRANSIT": ["TRANSPORT", "TRANSPORTATION"],
+        "SOFTWARE": ["SUBSCRIPTIONS", "SOFTWARE SERVICES", "SAAS"],
+        "GAS": ["FUEL"],
+    }
+    for category in categories:
+        normalized_name = normalize_merchant_text(category.name)
+        normalized_code = normalize_merchant_text(category.code)
+        for alias in alias_map.get(target, []):
+            if normalized_name == alias or normalized_code == alias:
+                return category
+    return None
+
+
 async def run_sync_cycle(db: Session, client: ExtendClient, force_full: bool = False) -> SyncRun:
     async with sync_lock:
         completed_runs = db.scalar(select(func.count()).select_from(SyncRun).where(SyncRun.status == "completed")) or 0
@@ -224,6 +264,7 @@ async def run_sync_cycle(db: Session, client: ExtendClient, force_full: bool = F
         try:
             transactions_fetched, transactions_upserted = await sync_transactions(db, client, days_back)
             await refresh_expense_categories(db, client)
+            await auto_assign_categorization_rules(db, client)
             sync_run.status = "completed"
             sync_run.transactions_fetched = transactions_fetched
             sync_run.transactions_upserted = transactions_upserted
@@ -272,10 +313,17 @@ def dashboard_summary(db: Session) -> dict[str, Any]:
     total_spend = sum(max(tx.amount_cents, 0) for tx in transactions)
     top_merchants_counter: Counter[str] = Counter()
     top_categories_counter: Counter[str] = Counter()
+    spend_by_status_counter: Counter[str] = Counter()
+    spend_by_day_counter: Counter[str] = Counter()
 
     for tx in transactions:
+        positive_amount = max(tx.amount_cents, 0)
         if tx.merchant_name:
-            top_merchants_counter[tx.merchant_name] += max(tx.amount_cents, 0)
+            top_merchants_counter[tx.merchant_name] += positive_amount
+        if tx.status:
+            spend_by_status_counter[tx.status] += positive_amount
+        if tx.occurred_at:
+            spend_by_day_counter[tx.occurred_at.strftime("%b %d")] += positive_amount
         details = tx.detail.expense_details if tx.detail else []
         for detail in details:
             category_id = detail.get("categoryId")
@@ -283,9 +331,23 @@ def dashboard_summary(db: Session) -> dict[str, Any]:
             label = db.get(ExpenseLabel, label_id) if label_id else None
             category = db.get(ExpenseCategory, category_id) if category_id else None
             label_name = label.name if label else (category.name if category else "Unlabeled")
-            top_categories_counter[label_name] += max(tx.amount_cents, 0)
+            top_categories_counter[label_name] += positive_amount
+        if not details and tx.suggested_category_name:
+            top_categories_counter[tx.suggested_category_name] += positive_amount
 
     latest = latest_sync_run(db)
+    recent_transactions = sorted(
+        transactions,
+        key=lambda tx: tx.occurred_at or datetime.min,
+        reverse=True,
+    )[:6]
+    spend_by_day = [
+        {"label": label, "amountCents": amount}
+        for label, amount in sorted(
+            spend_by_day_counter.items(),
+            key=lambda item: datetime.strptime(item[0], "%b %d"),
+        )[-7:]
+    ]
     return {
         "totalSpendCents": total_spend,
         "transactionCount": len(transactions),
@@ -298,6 +360,23 @@ def dashboard_summary(db: Session) -> dict[str, Any]:
         "topCategories": [
             {"label": label, "amountCents": amount}
             for label, amount in top_categories_counter.most_common(5)
+        ],
+        "spendByDay": spend_by_day,
+        "spendByStatus": [
+            {"label": label, "amountCents": amount}
+            for label, amount in spend_by_status_counter.most_common(4)
+        ],
+        "recentTransactions": [
+            {
+                "id": tx.id,
+                "merchantName": tx.merchant_name,
+                "amountCents": tx.amount_cents,
+                "status": tx.status,
+                "occurredAt": tx.occurred_at,
+                "receiptMissing": tx.receipt_missing,
+                "missingExpenseCategories": tx.missing_expense_categories,
+            }
+            for tx in recent_transactions
         ],
         "lastSyncAt": latest.finished_at if latest else None,
     }

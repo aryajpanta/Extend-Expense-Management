@@ -1,5 +1,21 @@
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+const ENV_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+
+function resolveApiBaseUrl() {
+  if (typeof window === "undefined") {
+    return ENV_API_BASE_URL;
+  }
+
+  const url = new URL(ENV_API_BASE_URL);
+  const isLocalApiHost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  const isLocalPageHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+  // Keep API and page on the same local hostname so session cookies stay usable in dev.
+  if (isLocalApiHost && isLocalPageHost && url.hostname !== window.location.hostname) {
+    url.hostname = window.location.hostname;
+  }
+
+  return url.toString();
+}
 
 export class APIError extends Error {
   status: number;
@@ -16,7 +32,7 @@ type FetchOptions = RequestInit & {
 };
 
 function buildUrl(path: string, query?: FetchOptions["query"]) {
-  const url = new URL(path, `${API_BASE_URL}/`);
+  const url = new URL(path, `${resolveApiBaseUrl()}/`);
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
       if (value === undefined || value === null || value === "") {
@@ -73,6 +89,17 @@ export type DashboardSummary = {
   missingCategoryCount: number;
   topMerchants: { label: string; amountCents: number }[];
   topCategories: { label: string; amountCents: number }[];
+  spendByDay: { label: string; amountCents: number }[];
+  spendByStatus: { label: string; amountCents: number }[];
+  recentTransactions: {
+    id: string;
+    merchantName: string | null;
+    amountCents: number;
+    status: string | null;
+    occurredAt: string | null;
+    receiptMissing: boolean;
+    missingExpenseCategories: boolean;
+  }[];
   lastSyncAt: string | null;
 };
 
@@ -89,6 +116,8 @@ export type TransactionListItem = {
   receiptMissing: boolean;
   attachmentsCount: number;
   missingExpenseCategories: boolean;
+  suggestedCategoryName: string | null;
+  suggestedCategoryReason: string | null;
 };
 
 export type TransactionDetail = TransactionListItem & {
@@ -132,6 +161,25 @@ export type ExpenseLabel = {
   name: string;
   code: string;
   active: boolean;
+};
+
+export type MerchantRule = {
+  id: number;
+  matchType: string;
+  pattern: string;
+  categoryId: string;
+  labelId: string | null;
+  priority: number;
+  active: boolean;
+  categoryName: string;
+  labelName: string | null;
+};
+
+export type MerchantRuleSeedResult = {
+  categoriesCreated: number;
+  rulesCreated: number;
+  categoriesTotal: number;
+  rulesTotal: number;
 };
 
 export type LoginPayload = {

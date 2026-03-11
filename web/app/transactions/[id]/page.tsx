@@ -108,7 +108,17 @@ export default function TransactionDetailPage({
               <dt className="text-xs uppercase tracking-[0.18em] text-slate">Expense lines</dt>
               <dd className="mt-2 text-sm">{transaction.expenseDetails.length}</dd>
             </div>
+            <div className="rounded-2xl bg-fog p-4">
+              <dt className="text-xs uppercase tracking-[0.18em] text-slate">Suggested category</dt>
+              <dd className="mt-2 text-sm">{transaction.suggestedCategoryName ?? "No suggestion yet"}</dd>
+            </div>
           </dl>
+          {transaction.suggestedCategoryReason ? (
+            <div className="mt-6 rounded-2xl border border-black/5 p-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate">Merchant research</div>
+              <p className="mt-2 text-sm text-slate">{transaction.suggestedCategoryReason}</p>
+            </div>
+          ) : null}
           {transaction.notes ? (
             <div className="mt-6 rounded-2xl border border-black/5 p-4">
               <div className="text-xs uppercase tracking-[0.18em] text-slate">Notes</div>

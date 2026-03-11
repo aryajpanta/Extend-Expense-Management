@@ -4,14 +4,38 @@
 
 :root {
   color-scheme: light;
+  --color-ink: 27 35 48;
+  --color-fog: 244 246 248;
+  --color-pine: 28 110 91;
+  --color-rust: 181 93 44;
+  --color-sand: 233 221 199;
+  --color-slate: 96 114 132;
+  --color-card: 255 255 255;
+  --page-radial: rgba(233, 221, 199, 0.45);
+  --page-start: #f8f8f5;
+  --page-end: #f4f6f8;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: 232 236 242;
+  --color-fog: 29 36 47;
+  --color-pine: 88 180 154;
+  --color-rust: 214 128 83;
+  --color-sand: 102 88 67;
+  --color-slate: 158 172 189;
+  --color-card: 20 27 38;
+  --page-radial: rgba(53, 67, 89, 0.42);
+  --page-start: #101620;
+  --page-end: #17212f;
 }
 
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(233, 221, 199, 0.45), transparent 28%),
-    linear-gradient(180deg, #f8f8f5 0%, #f4f6f8 100%);
-  color: #1b2330;
+    radial-gradient(circle at top left, var(--page-radial), transparent 28%),
+    linear-gradient(180deg, var(--page-start) 0%, var(--page-end) 100%);
+  color: rgb(var(--color-ink));
   font-family: "Avenir Next", "Helvetica Neue", sans-serif;
 }
 
@@ -26,3 +50,32 @@ select {
   font: inherit;
 }
 
+html[data-theme="dark"] .bg-white {
+  background-color: rgb(var(--color-card)) !important;
+}
+
+html[data-theme="dark"] .bg-fog {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+html[data-theme="dark"] .bg-sand\/60 {
+  background-color: rgba(102, 88, 67, 0.35) !important;
+}
+
+html[data-theme="dark"] .text-ink {
+  color: rgb(var(--color-ink)) !important;
+}
+
+html[data-theme="dark"] .text-slate {
+  color: rgb(var(--color-slate)) !important;
+}
+
+html[data-theme="dark"] .border-black\/5,
+html[data-theme="dark"] .border-black\/10,
+html[data-theme="dark"] .border-black\/15 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html[data-theme="dark"] .shadow-card {
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32) !important;
+}

@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .database import db_context
-from .routers import auth, categories, dashboard, settings as settings_router, sync, transactions
+from .routers import auth, categories, dashboard, merchant_rules, settings as settings_router, sync, transactions
 from .services.bootstrap import bootstrap_admin, migrate_database
 from .services.extend_api import get_extend_client
 from .services.sync import run_sync_cycle
@@ -45,7 +45,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title=app_settings.app_name, lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[app_settings.frontend_origin],
+        allow_origins=app_settings.allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -60,6 +60,7 @@ def create_app() -> FastAPI:
     app.include_router(sync.router, prefix=app_settings.api_prefix)
     app.include_router(transactions.router, prefix=app_settings.api_prefix)
     app.include_router(categories.router, prefix=app_settings.api_prefix)
+    app.include_router(merchant_rules.router, prefix=app_settings.api_prefix)
     app.include_router(settings_router.router, prefix=app_settings.api_prefix)
     return app
 

@@ -4,9 +4,13 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT_DIR / "data"
+
+load_dotenv(ROOT_DIR / ".env")
 
 
 @dataclass(frozen=True)
@@ -31,6 +35,15 @@ class Settings:
     @property
     def has_extend_credentials(self) -> bool:
         return bool(self.extend_api_key and self.extend_api_secret)
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        origins = {self.frontend_origin}
+        if "localhost" in self.frontend_origin:
+            origins.add(self.frontend_origin.replace("localhost", "127.0.0.1"))
+        if "127.0.0.1" in self.frontend_origin:
+            origins.add(self.frontend_origin.replace("127.0.0.1", "localhost"))
+        return sorted(origins)
 
     @property
     def masked_extend_key(self) -> str | None:
@@ -62,4 +75,3 @@ def get_settings() -> Settings:
         extend_api_secret=os.getenv("EXTEND_API_SECRET", ""),
         extend_env=os.getenv("ENV", "prod"),
     )
-

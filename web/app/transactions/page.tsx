@@ -103,9 +103,10 @@ export default function TransactionsPage() {
         <div className="mt-4 text-sm text-slate">{response.total} cached transactions match your current filters.</div>
       </section>
       <section className="overflow-hidden rounded-[28px] bg-white shadow-card">
-        <div className="grid grid-cols-[1.1fr_1fr_0.7fr_0.65fr_0.4fr] gap-4 border-b border-black/5 px-6 py-4 text-xs uppercase tracking-[0.18em] text-slate">
+        <div className="grid grid-cols-[1.1fr_1fr_0.8fr_0.7fr_0.65fr_0.4fr] gap-4 border-b border-black/5 px-6 py-4 text-xs uppercase tracking-[0.18em] text-slate">
           <span>Merchant</span>
           <span>Card</span>
+          <span>Category</span>
           <span>Status</span>
           <span>Date</span>
           <span className="text-right">Amount</span>
@@ -115,7 +116,7 @@ export default function TransactionsPage() {
             <Link
               key={transaction.id}
               href={`/transactions/${transaction.id}`}
-              className="grid grid-cols-[1.1fr_1fr_0.7fr_0.65fr_0.4fr] gap-4 border-b border-black/5 px-6 py-5 transition hover:bg-fog"
+              className="grid grid-cols-[1.1fr_1fr_0.8fr_0.7fr_0.65fr_0.4fr] gap-4 border-b border-black/5 px-6 py-5 transition hover:bg-fog"
             >
               <div>
                 <div className="font-medium text-ink">{transaction.merchantName ?? "Unknown merchant"}</div>
@@ -126,6 +127,10 @@ export default function TransactionsPage() {
               <div className="text-sm text-slate">
                 <div>{transaction.cardDisplayName ?? "Unknown card"}</div>
                 <div>{transaction.cardLast4 ? `•••• ${transaction.cardLast4}` : "No last4"}</div>
+              </div>
+              <div className="text-sm text-slate">
+                <div>{transaction.suggestedCategoryName ?? "Uncategorized"}</div>
+                <div>{transaction.suggestedCategoryReason ? "Merchant researched" : "No match yet"}</div>
               </div>
               <div className="text-sm text-slate">{transaction.status ?? "Unknown"}</div>
               <div className="text-sm text-slate">{friendlyDate(transaction.occurredAt)}</div>

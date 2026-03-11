@@ -9,6 +9,7 @@ import { BarChart3, CreditCard, LayoutDashboard, RefreshCcw, Settings2 } from "l
 import { SessionResponse, apiFetch } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
 import { LogoutButton } from "@/components/logout-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -37,46 +38,51 @@ export function AppShell({
 
   return (
     <AuthGate>
-      <div className="min-h-screen bg-fog text-ink">
-        <div className="grid min-h-screen lg:grid-cols-[260px_1fr]">
-          <aside className="border-r border-black/5 bg-white">
-            <div className="border-b border-black/5 px-6 py-6">
-              <div className="text-xs uppercase tracking-[0.24em] text-slate">Extend</div>
-              <div className="mt-2 font-['Iowan_Old_Style','Palatino_Linotype',serif] text-2xl font-semibold">
-                Expense Atlas
+      <div className="h-screen overflow-hidden bg-fog text-ink">
+        <div className="grid h-screen lg:grid-cols-[260px_1fr]">
+          <aside className="relative flex h-screen flex-col overflow-hidden border-r border-black/5 bg-white">
+            <div className="flex-1 overflow-hidden">
+              <div className="border-b border-black/5 px-6 py-6">
+                <div className="text-xs uppercase tracking-[0.24em] text-slate">Extend</div>
+                <div className="mt-2 font-['Iowan_Old_Style','Palatino_Linotype',serif] text-2xl font-semibold">
+                  Expense Atlas
+                </div>
+                <p className="mt-2 text-sm text-slate">A personal cashflow and receipt cockpit.</p>
               </div>
-              <p className="mt-2 text-sm text-slate">A personal cashflow and receipt cockpit.</p>
+              <nav className="space-y-2 p-4">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={clsx(
+                        "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
+                        active ? "bg-ink text-white" : "text-slate hover:bg-fog hover:text-ink"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="mx-4 mt-8 rounded-3xl bg-sand/60 p-5 text-sm text-ink">
+                <div className="flex items-center gap-2 font-medium">
+                  <RefreshCcw className="h-4 w-4" />
+                  Sync-aware
+                </div>
+                <p className="mt-2 text-slate">
+                  Your transaction cache stays local while Extend remains the source of truth.
+                </p>
+              </div>
             </div>
-            <nav className="space-y-2 p-4">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={clsx(
-                      "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
-                      active ? "bg-ink text-white" : "text-slate hover:bg-fog hover:text-ink"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="mx-4 mt-8 rounded-3xl bg-sand/60 p-5 text-sm text-ink">
-              <div className="flex items-center gap-2 font-medium">
-                <RefreshCcw className="h-4 w-4" />
-                Sync-aware
-              </div>
-              <p className="mt-2 text-slate">
-                Your transaction cache stays local while Extend remains the source of truth.
-              </p>
+            <div className="absolute bottom-4 left-4 z-10">
+              <ThemeToggle />
             </div>
           </aside>
-          <main className="px-5 py-6 lg:px-8">
+          <main className="h-screen overflow-y-auto px-5 py-6 lg:px-8">
             <div className="mb-6 flex flex-col gap-4 rounded-[28px] bg-white px-6 py-5 shadow-card lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <div className="text-xs uppercase tracking-[0.24em] text-slate">Personal Workspace</div>

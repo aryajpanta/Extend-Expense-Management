@@ -46,6 +46,8 @@ class Transaction(Base):
     receipt_missing: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     attachments_count: Mapped[int] = mapped_column(Integer, default=0)
     missing_expense_categories: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    suggested_category_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+    suggested_category_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     raw_payload: Mapped[dict] = mapped_column(JSON, default=dict)
     synced_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 
@@ -115,6 +117,22 @@ class ExpenseLabel(Base):
     synced_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     category: Mapped[ExpenseCategory] = relationship(back_populates="labels")
+
+
+class MerchantRule(Base):
+    __tablename__ = "merchant_rules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    match_type: Mapped[str] = mapped_column(String(32), index=True)
+    pattern: Mapped[str] = mapped_column(String(255), index=True)
+    category_id: Mapped[str] = mapped_column(ForeignKey("expense_categories.id"), index=True)
+    label_id: Mapped[Optional[str]] = mapped_column(ForeignKey("expense_labels.id"), nullable=True, index=True)
+    priority: Mapped[int] = mapped_column(Integer, default=100, index=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    category: Mapped[ExpenseCategory] = relationship()
+    label: Mapped[Optional[ExpenseLabel]] = relationship()
 
 
 class SyncRun(Base):

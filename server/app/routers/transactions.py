@@ -38,6 +38,8 @@ def to_list_item(tx: Transaction) -> TransactionListItem:
         receiptMissing=tx.receipt_missing,
         attachmentsCount=tx.attachments_count,
         missingExpenseCategories=tx.missing_expense_categories,
+        suggestedCategoryName=tx.suggested_category_name,
+        suggestedCategoryReason=tx.suggested_category_reason,
     )
 
 

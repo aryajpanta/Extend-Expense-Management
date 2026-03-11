@@ -25,6 +25,21 @@ class TopBucket(BaseModel):
     amountCents: int
 
 
+class TrendPoint(BaseModel):
+    label: str
+    amountCents: int
+
+
+class RecentTransactionSummary(BaseModel):
+    id: str
+    merchantName: Optional[str] = None
+    amountCents: int
+    status: Optional[str] = None
+    occurredAt: Optional[datetime] = None
+    receiptMissing: bool
+    missingExpenseCategories: bool
+
+
 class DashboardSummary(BaseModel):
     totalSpendCents: int
     transactionCount: int
@@ -32,6 +47,9 @@ class DashboardSummary(BaseModel):
     missingCategoryCount: int
     topMerchants: list[TopBucket]
     topCategories: list[TopBucket]
+    spendByDay: list[TrendPoint]
+    spendByStatus: list[TopBucket]
+    recentTransactions: list[RecentTransactionSummary]
     lastSyncAt: Optional[datetime]
 
 
@@ -48,6 +66,8 @@ class TransactionListItem(BaseModel):
     receiptMissing: bool
     attachmentsCount: int
     missingExpenseCategories: bool
+    suggestedCategoryName: Optional[str] = None
+    suggestedCategoryReason: Optional[str] = None
 
 
 class ReceiptAttachmentResponse(BaseModel):
@@ -95,6 +115,43 @@ class ExpenseLabelResponse(BaseModel):
     name: str
     code: str
     active: bool
+
+
+class MerchantRuleResponse(BaseModel):
+    id: int
+    matchType: str
+    pattern: str
+    categoryId: str
+    labelId: Optional[str] = None
+    priority: int
+    active: bool
+    categoryName: str
+    labelName: Optional[str] = None
+
+
+class CreateMerchantRuleRequest(BaseModel):
+    matchType: str
+    pattern: str
+    categoryId: str
+    labelId: Optional[str] = None
+    priority: int = 100
+    active: bool = True
+
+
+class UpdateMerchantRuleRequest(BaseModel):
+    matchType: Optional[str] = None
+    pattern: Optional[str] = None
+    categoryId: Optional[str] = None
+    labelId: Optional[str] = None
+    priority: Optional[int] = None
+    active: Optional[bool] = None
+
+
+class MerchantRuleSeedResponse(BaseModel):
+    categoriesCreated: int
+    rulesCreated: int
+    categoriesTotal: int
+    rulesTotal: int
 
 
 class CreateExpenseCategoryRequest(BaseModel):

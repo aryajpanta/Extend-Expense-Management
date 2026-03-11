@@ -5,12 +5,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#1B2330",
-        fog: "#F4F6F8",
-        pine: "#1C6E5B",
-        rust: "#B55D2C",
-        sand: "#E9DDC7",
-        slate: "#607284"
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        fog: "rgb(var(--color-fog) / <alpha-value>)",
+        pine: "rgb(var(--color-pine) / <alpha-value>)",
+        rust: "rgb(var(--color-rust) / <alpha-value>)",
+        sand: "rgb(var(--color-sand) / <alpha-value>)",
+        slate: "rgb(var(--color-slate) / <alpha-value>)",
+        card: "rgb(var(--color-card) / <alpha-value>)"
       },
       boxShadow: {
         card: "0 18px 40px rgba(17, 24, 39, 0.08)"
@@ -21,4 +22,3 @@ const config: Config = {
 };
 
 export default config;
-

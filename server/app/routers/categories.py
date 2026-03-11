@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -54,27 +54,10 @@ async def create_category(
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ExpenseCategoryResponse:
-    response = await get_extend_client().expense_data.create_expense_category(
-        name=payload.name,
-        code=payload.code,
-        required=payload.required,
-        active=payload.active,
-        free_text_allowed=payload.freeTextAllowed,
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Creating Extend expense categories from this app is disabled.",
     )
-    item = response.get("expenseCategory", response)
-    category = ExpenseCategory(
-        id=item["id"],
-        name=item["name"],
-        code=item["code"],
-        active=bool(item.get("active", True)),
-        required=bool(item.get("required", False)),
-        free_text_allowed=item.get("freeTextAllowed"),
-        raw_payload=item,
-    )
-    category = db.merge(category)
-    db.commit()
-    db.refresh(category)
-    return to_category_response(category)
 
 
 @router.patch("/{category_id}", response_model=ExpenseCategoryResponse)
@@ -124,25 +107,10 @@ async def create_label(
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ExpenseLabelResponse:
-    response = await get_extend_client().expense_data.create_expense_category_label(
-        category_id=category_id,
-        name=payload.name,
-        code=payload.code,
-        active=payload.active,
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Creating Extend expense labels from this app is disabled.",
     )
-    item = response.get("expenseLabel", response)
-    label = ExpenseLabel(
-        id=item["id"],
-        category_id=category_id,
-        name=item["name"],
-        code=item["code"],
-        active=bool(item.get("active", True)),
-        raw_payload=item,
-    )
-    label = db.merge(label)
-    db.commit()
-    db.refresh(label)
-    return to_label_response(label)
 
 
 @router.patch("/{category_id}/labels/{label_id}", response_model=ExpenseLabelResponse)
