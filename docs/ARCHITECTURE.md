@@ -1,26 +1,52 @@
 # Architecture
 
-## Components
+## System overview
 
-- Extend SDK
-  - `extend/`
-  - Handles authenticated API access to Extend
-- App backend
-  - `server/app`
-  - FastAPI routes, session auth, SQLite persistence, sync service, and data normalization
-- App frontend
-  - `web/`
-  - Next.js UI using browser-side fetches against the FastAPI API
+The repository has three main runtime layers:
 
-## Data flow
+1. SDK layer
+   - `extend/`
+   - Wraps Extend API endpoints and auth
+2. App backend
+   - `server/app/`
+   - Owns local auth, SQLite persistence, sync orchestration, normalization, and app-facing APIs
+3. App frontend
+   - `web/`
+   - Owns the browser UI and calls the FastAPI backend with session cookies
 
-1. User signs into the local app
-2. Frontend calls FastAPI using session cookies
-3. Backend reads/writes SQLite cache
-4. Backend syncs or mutates data against Extend via the local SDK
-5. Frontend renders cached data and mutation results
+## Backend responsibilities
 
-## Integration note
+- bootstrap one admin user from env
+- manage signed cookie sessions
+- sync transactions and expense metadata from Extend into SQLite
+- refresh transaction details on demand when stale
+- proxy expense-data and receipt mutations to Extend
+- expose app-friendly API endpoints for the frontend
 
-The SDK remains embedded in the same repo, but app-specific logic should stay outside `extend/` unless a real SDK bug or compatibility fix is required.
+## Frontend responsibilities
+
+- render dashboard, transactions, categories, and settings
+- keep the app usable with local cached data
+- trigger syncs and mutations through the backend
+- preserve the transaction-review workflow shape from Extend without cloning its styling
+
+## Persistence model
+
+- SQLite is the local source for fast reads
+- Extend remains the remote source of truth
+- Transaction summaries, details, receipts, expense categories, expense labels, and sync runs are cached locally
+
+## Sync model
+
+- startup sync on app boot
+- recurring background sync every 15 minutes
+- first sync backfills a larger date window
+- later syncs use a rolling incremental window
+- transaction detail is refreshed live if the local cached detail is stale
+
+## Current technical debt
+
+- schema creation still uses `create_all()` rather than Alembic migrations
+- category/label selection UX is not yet backed by rich frontend selectors
+- dashboard visualizations are still minimal
 

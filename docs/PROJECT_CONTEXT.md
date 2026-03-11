@@ -1,23 +1,37 @@
 # Project Context
 
-This repository started as the official Extend Python SDK and now also contains a personal expense management app.
+## What this project is
 
-## Product
+This repository preserves the original Extend Python SDK history and layers a personal expense management product on top of it.
+
+The goal is not to turn the SDK into a generic SaaS platform. The goal is to build a focused, single-user web app that makes it easier to review Extend transactions, keep receipts organized, and clean up expense categories.
+
+## Product shape
 
 - Single-user
 - Web-only
 - Local/self-hosted first
-- Uses Extend as the external source of truth for transactions, receipts, and expense data
+- Extend-backed
+- Transaction-centric
 
-## Main runtime surfaces
+## Intended user experience
 
-- `extend/`: Extend API SDK
-- `server/`: local backend that syncs Extend data into SQLite and exposes app APIs
-- `web/`: local frontend for login, dashboard, transactions, categories, and settings
+- Familiar transaction list and detail flow inspired by PayWithExtend
+- Cleaner and calmer than Extend’s enterprise UI
+- Optimized for fast review, sync, and cleanup rather than broad account administration
 
-## Current constraints
+## What matters most right now
 
-- Python runtime in this environment is 3.9
-- The app should not depend on direct frontend access to Extend credentials
-- Virtual-card workflows are intentionally not a product priority for the app
+- Reliable local login and session handling
+- Local cached transaction performance
+- Sync safety and visibility
+- Receipt upload and tracking
+- Expense category correction workflows
+
+## What is explicitly out of scope for now
+
+- Multi-user support
+- Native mobile apps
+- Virtual-card-focused workflows
+- Broader enterprise admin surfaces like people and card administration
 

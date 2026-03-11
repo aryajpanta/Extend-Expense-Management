@@ -1,10 +1,15 @@
 # Commands
 
+## Clone
+
+- `git clone --recurse-submodules git@github.com:aryajpanta/Extend-Expense-Management.git`
+
 ## Install
 
 - `python3 -m venv .venv`
 - `.venv/bin/pip install '.[app,dev]'`
-- `cd web && npm install`
+- `cp server/.env.example .env`
+- `cd web && cp .env.local.example .env.local && npm install`
 
 ## Backend dev
 
@@ -14,15 +19,19 @@
 
 - `cd web && npm run dev`
 
-## Tests
+## Backend tests
 
 - `PYTHONPATH=. .venv/bin/pytest tests/app tests/test_client.py -q`
 
-## Build
+## Frontend build
 
 - `cd web && npm run build`
 
 ## Verify
 
 - `./tools/verify.sh`
+
+## Git
+
+- `git submodule update --init --recursive`
 

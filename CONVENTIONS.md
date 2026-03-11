@@ -1,25 +1,39 @@
 # Conventions
 
-## Repo shape
+## Repository boundaries
 
-- Keep the AI template isolated under `.ai`
-- Keep project-specific instructions in root docs, not inside `.ai`
-- Do not mix frontend-only tooling into the Python SDK package
+- Keep `.ai` isolated as a submodule.
+- Keep project-specific agent instructions in root docs, not in `.ai`.
+- Keep app-only logic out of `extend/` unless a real SDK-level change is required.
 
-## Backend
+## Backend conventions
 
-- FastAPI code lives under `server/app`
-- Prefer explicit service-layer functions for Extend sync logic
-- Maintain Python 3.9 compatibility for repo-wide Python code
+- Put API route code in `server/app/routers/`.
+- Put non-trivial business and sync logic in `server/app/services/`.
+- Keep schema, auth, persistence, and sync concerns clearly separated.
+- Preserve Python 3.9 compatibility in backend and SDK code.
+- Prefer explicit normalization functions over hidden model magic when adapting Extend payloads.
 
-## Frontend
+## Frontend conventions
 
-- Next.js app code lives under `web/app`, `web/components`, and `web/lib`
-- Preserve the current visual direction: clean personal workspace, inspired by Extend flow but not a clone
+- Keep page entry points in `web/app/`.
+- Keep shared UI in `web/components/`.
+- Keep API helper code and shared formatters in `web/lib/`.
+- Maintain the existing visual direction:
+  - calm personal workspace
+  - left-rail navigation
+  - Extend-inspired transaction workflow
+  - not an Extend branding clone
 
-## Verification
+## Product conventions
 
-- Default to `tools/verify.sh`
-- If a change touches `web/`, ensure `npm run build` still passes
-- If a change touches `server/` or `extend/`, ensure the backend pytest smoke set still passes
+- Optimize for one-user clarity over generic admin flexibility.
+- Favor quick transaction review and cleanup workflows.
+- Use local cache speed, but keep Extend as the source of truth for remote mutations.
+
+## Verification conventions
+
+- Run `./tools/verify.sh` before closing meaningful work.
+- If changing backend or SDK behavior, run the backend smoke tests.
+- If changing frontend code, ensure `cd web && npm run build` still passes.
 

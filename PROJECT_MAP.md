@@ -1,24 +1,52 @@
 # Project Map
 
-## Top-level structure
+## Top-level directories
 
-- `extend/`: upstream Extend Python SDK
-- `server/`: FastAPI backend for auth, sync, cache, and API routes
-- `web/`: Next.js frontend for the personal expense manager
-- `tests/`: SDK tests plus app-focused backend tests under `tests/app`
-- `docs/`: project docs and app setup material
-- `data/`: local SQLite path for the expense manager app
-- `.ai/`: AI template submodule
-- `tools/`: project-local helper scripts
+- `.ai/`
+  - AI template submodule
+  - reusable agent workflows and templates
+- `agent/`
+  - project-specific command surface for agents
+- `data/`
+  - local SQLite target path
+- `docs/`
+  - project-specific product, architecture, and runbook docs
+- `extend/`
+  - upstream Extend Python SDK
+- `server/`
+  - FastAPI backend for auth, sync, cache, and API routes
+- `tests/`
+  - SDK tests plus app backend smoke tests in `tests/app`
+- `tools/`
+  - project-local helper commands like `verify.sh`
+- `web/`
+  - Next.js frontend
 
-## Working focus
+## High-value files
 
-- App product work usually lands in `server/`, `web/`, `docs/`, and `tests/app/`
-- SDK compatibility or Extend integration fixes land in `extend/`
+- [server/app/main.py](/Users/aryajpanta/Extend-Python/extend-python/server/app/main.py)
+  - FastAPI app creation and startup sync behavior
+- [server/app/services/sync.py](/Users/aryajpanta/Extend-Python/extend-python/server/app/services/sync.py)
+  - Extend sync, normalization, detail refresh, and dashboard aggregation
+- [server/app/models.py](/Users/aryajpanta/Extend-Python/extend-python/server/app/models.py)
+  - SQLite schema via SQLAlchemy models
+- [web/app/dashboard/page.tsx](/Users/aryajpanta/Extend-Python/extend-python/web/app/dashboard/page.tsx)
+  - dashboard entry point
+- [web/app/transactions/page.tsx](/Users/aryajpanta/Extend-Python/extend-python/web/app/transactions/page.tsx)
+  - transaction list entry point
+- [web/app/transactions/[id]/page.tsx](/Users/aryajpanta/Extend-Python/extend-python/web/app/transactions/[id]/page.tsx)
+  - transaction detail, receipt upload, and expense-data mutation UI
+- [tools/verify.sh](/Users/aryajpanta/Extend-Python/extend-python/tools/verify.sh)
+  - default verification entry point
 
-## Verification workflow
+## Change boundaries
 
-1. Backend checks via `tools/verify.sh`
-2. Frontend production build via `web/npm run build`
-3. Update `AGENT_MEMORY.md` only with durable learnings
+- App product changes:
+  - usually `server/`, `web/`, `docs/`, `tests/app/`
+- SDK/API compatibility fixes:
+  - `extend/`
+- AI workflow customization:
+  - root docs, `agent/`, `tools/`
+- Template updates:
+  - update the `.ai` submodule pointer, do not edit `.ai` files directly
 
